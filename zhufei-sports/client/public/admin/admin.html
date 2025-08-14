@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>助飞体育 - 预约管理系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#FF7D00',
+                        success: '#36D399',
+                        warning: '#FBBD23',
+                        danger: '#F87272',
+                        dark: '#1E293B',
+                        light: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .sidebar-active {
+                @apply bg-primary/10 text-primary border-l-4 border-primary;
+            }
+            .transition-custom {
+                transition: all 0.2s ease;
+            }
+        }
+    </style>
+</head>
+<body class="font-inter bg-gray-50 text-dark antialiased">
+    <div class="flex h-screen overflow-hidden">
+        <!-- 侧边栏 -->
+        <aside class="hidden md:flex flex-col w-64 bg-white shadow-lg z-10">
+            <div class="flex items-center space-x-2 p-6 border-b">
+                <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+                    <i class="fa fa-rocket text-white text-xl"></i>
+                </div>
+                <span class="text-xl font-bold text-primary">助飞体育</span>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto py-4">
+                <nav class="px-2 space-y-1">
+                    <p class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">管理菜单</p>
+                    
+                    <a href="#" class="sidebar-active flex items-center px-4 py-3 text-sm font-medium rounded-md transition-custom">
+                        <i class="fa fa-calendar-check-o w-5 h-5 mr-3"></i>
+                        预约管理
+                    </a>
+                    
+                    <a href="#" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-custom">
+                        <i class="fa fa-users w-5 h-5 mr-3"></i>
+                        学员管理
+                    </a>
+                    
+                    <a href="#" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-custom">
+                        <i class="fa fa-list w-5 h-5 mr-3"></i>
+                        课程管理
+                    </a>
+                    
+                    <a href="#" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-custom">
+                        <i class="fa fa-bar-chart w-5 h-5 mr-3"></i>
+                        数据统计
+                    </a>
+                    
+                    <p class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-6 mb-2">系统设置</p>
+                    
+                    <a href="#" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-custom">
+                        <i class="fa fa-user w-5 h-5 mr-3"></i>
+                        管理员设置
+                    </a>
+                    
+                    <a href="#" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-custom">
+                        <i class="fa fa-cog w-5 h-5 mr-3"></i>
+                        系统设置
+                    </a>
+                </nav>
+            </div>
+            
+            <div class="p-4 border-t">
+                <button id="logoutBtn" class="flex items-center w-full px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-custom">
+                    <i class="fa fa-sign-out w-5 h-5 mr-3"></i>
+                    退出登录
+                </button>
+            </div>
+        </aside>
+        
+        <!-- 主内容区 -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- 顶部导航 -->
+            <header class="bg-white shadow-sm z-10">
+                <div class="flex items-center justify-between h-16 px-6">
+                    <div class="flex items-center">
+                        <button id="mobileSidebarBtn" class="md:hidden text-gray-500 hover:text-gray-700 focus:outline-none">
+                            <i class="fa fa-bars text-xl"></i>
+                        </button>
+                        <h1 class="ml-4 md:ml-0 text-xl font-semibold">预约管理</h1>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <div class="relative">
+                            <button id="notificationBtn" class="p-2 text-gray-500 hover:text-gray-700 focus:outline-none relative">
+                                <i class="fa fa-bell text-xl"></i>
+                                <span class="absolute top-1 right-1 w-2 h-2 bg-danger rounded-full"></span>
+                            </button>
+                        </div>
+                        
+                        <div class="ml-4 relative">
+                            <div class="flex items-center">
+                                <img class="h-8 w-8 rounded-full object-cover" src="https://picsum.photos/id/1005/100/100" alt="管理员头像">
+                                <span class="ml-2 hidden md:block text-sm font-medium" id="adminName">管理员</span>
+                                <i class="fa fa-chevron-down ml-1 text-xs text-gray-500"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- 内容区域 -->
+            <main class="flex-1 overflow-y-auto bg-gray-50 p-6">
+                <!-- 统计卡片 -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm font-medium">今日预约</p>
+                                <h3 class="text-3xl font-bold mt-1" id="todayBookings">0</h3>
+                            </div>
+                            <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                <i class="fa fa-calendar-plus-o text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-sm">
+                            <span class="text-success flex items-center">
+                                <i class="fa fa-arrow-up mr-1"></i> 16%
+                            </span>
+                            <span class="text-gray-500 ml-2">较昨日</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm font-medium">待处理预约</p>
+                                <h3 class="text-3xl font-bold mt-1" id="pendingBookings">0</h3>
+                            </div>
+                            <div class="w-12 h-12 rounded-full bg-warning/10 flex items-center justify-center text-warning">
+                                <i class="fa fa-clock-o text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-sm">
+                            <span class="text-danger flex items-center">
+                                <i class="fa fa-arrow-up mr-1"></i> 8%
+                            </span>
+                            <span class="text-gray-500 ml-2">较昨日</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-gray-500 text-sm font-medium">已处理预约</p>
+                                <h3 class="text-3xl font-bold mt-1" id="processedBookings">0</h3>
+                            </div>
+                            <div class="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center text-success">
+                                <i class="fa fa-check-circle-o text-xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-sm">
+                            <span class="text-success flex items-center">
+                                <i class="fa fa-arrow-up mr-1"></i> 24%
+                            </span>
+                            <span class="text-gray-500 ml-2">较上周</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 图表区域 -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white rounded-xl shadow-sm p-6 lg:col-span-2">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="font-semibold text-lg">近7天预约趋势</h3>
+                            <div class="flex space-x-2">
+                                <button class="px-3 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">周</button>
+                                <button class="px-3 py-1 text-xs font-medium text-gray-500 hover:bg-gray-100 rounded-full">月</button>
+                                <button class="px-3 py-1 text-xs font-medium text-gray-500 hover:bg-gray-100 rounded-full">年</button>
+                            </div>
+                        </div>
+                        <div class="h-64">
+                            <canvas id="bookingTrendChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-xl shadow-sm p-6">
+                        <h3 class="font-semibold text-lg mb-6">课程预约分布</h3>
+                        <div class="h-64">
+                            <canvas id="courseDistributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 预约列表 -->
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <div class="p-6 border-b">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                            <h3 class="font-semibold text-lg mb-4 md:mb-0">预约列表</h3>
+                            
+                            <div class="flex flex-col sm:flex-row gap-4">
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                        <i class="fa fa-search"></i>
+                                    </div>
+                                    <input type="text" id="searchInput" placeholder="搜索预约..."
+                                        class="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm w-full sm:w-64">
+                                </div>
+                                
+                                <select id="statusFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm">
+                                    <option value="all">所有状态</option>
+                                    <option value="pending">待处理</option>
+                                    <option value="processed">已处理</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        预约编号
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        学员信息
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        课程
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        预约时间
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        状态
+                                    </th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        操作
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="bookingTableBody" class="bg-white divide-y divide-gray-200">
+                                <!-- 预约数据将通过JavaScript动态生成 -->
+                                <tr>
+                                    <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                        <div class="flex flex-col items-center">
+                                            <i class="fa fa-calendar-o text-4xl mb-4 text-gray-300"></i>
+                                            <p>加载预约数据中...</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="px-6 py-4 border-t bg-gray-50 flex items-center justify-between">
+                        <div class="text-sm text-gray-500">
+                            显示 <span id="showingRange">0 到 0</span> 条，共 <span id="totalBookings">0</span> 条
+                        </div>
+                        
+                        <div class="flex space-x-2">
+                            <button id="prevPage" class="px-3 py-1 border border-gray-300 rounded-md text-gray-500 hover:bg-gray-50 disabled:opacity-50" disabled>
+                                <i class="fa fa-chevron-left text-xs"></i>
+                            </button>
+                            <button id="page1" class="px-3 py-1 bg-primary text-white rounded-md">1</button>
+                            <button id="nextPage" class="px-3 py-1 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50" disabled>
+                                <i class="fa fa-chevron-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- 处理预约弹窗 -->
+    <div id="processModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 opacity-0 pointer-events-none transition-opacity duration-300">
+        <div class="bg-white rounded-xl p-8 max-w-2xl w-full mx-4 transform scale-95 transition-transform duration-300 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold">处理预约</h3>
+                <button id="closeProcessModal" class="text-gray-400 hover:text-gray-600">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="processForm">
+                <input type="hidden" id="bookingId">
+                
+                <div class="mb-6">
+                    <h4 class="font-medium mb-4">预约详情</h4>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label class="block text-gray-500 text-sm mb-1">预约编号</label>
+                            <p id="modalBookingNumber" class="font-medium"></p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-500 text-sm mb-1">预约时间</label>
+                            <p id="modalBookingTimestamp" class="font-medium"></p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-500 text-sm mb-1">学员姓名</label>
+                            <p id="modalName" class="font-medium"></p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-500 text-sm mb-1">联系电话</label>
+                            <p id="modalPhone" class="font-medium"></p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-500 text-sm mb-1">预约课程</label>
+                            <p id="modalCourse" class="font-medium"></p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-500 text-sm mb-1">运动经验</label>
+                            <p id="modalExperience" class="font-medium"></p>
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <label class="block text-gray-500 text-sm mb-1">预约日期</label>
+                            <p id="modalDate" class="font-medium"></p>
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <label class="block text-gray-500 text-sm mb-1">预约时间</label>
+                            <p id="modalTime" class="font-medium"></p>
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <label class="block text-gray-500 text-sm mb-1">学员备注</label>
+                            <p id="modalMessage" class="font-medium"></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <h4 class="font-medium mb-4">处理信息</h4>
+                    
+                    <div class="mb-4">
+                        <label class="block text-gray-700 font-medium mb-2">处理状态</label>
+                        <div class="flex items-center space-x-4">
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="status" value="pending" class="form-radio text-primary focus:ring-primary">
+                                <span class="ml-2 text-gray-700">待处理</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="radio" name="status" value="processed" class="form-radio text-primary focus:ring-primary">
+                                <span class="ml-2 text-gray-700">已处理</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label for="notes" class="block text-gray-700 font-medium mb-2">处理备注</label>
+                        <textarea id="notes" name="notes" rows="4"
+                            class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-custom"
+                            placeholder="请输入处理结果或备注信息..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end space-x-4 pt-4 border-t">
+                    <button type="button" id="cancelProcess" 
+                        class="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-custom">
+                        取消
+                    </button>
+                    <button type="submit" 
+                        class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-custom">
+                        保存处理结果
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 操作成功提示 -->
+    <div id="successToast" class="fixed top-4 right-4 bg-success text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 flex items-center">
+        <i class="fa fa-check-circle mr-2"></i>
+        <span id="successMessage"></span>
+    </div>
+    
+    <!-- 错误提示 -->
+    <div id="errorToast" class="fixed top-4 right-4 bg-danger text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 flex items-center">
+        <i class="fa fa-exclamation-circle mr-2"></i>
+        <span id="errorMessage"></span>
+    </div>
+    
+    <!-- 移动端侧边栏 -->
+    <div id="mobileSidebar" class="fixed inset-0 bg-black/50 z-20 hidden md:hidden">
+        <div class="absolute top-0 left-0 bottom-0 w-64 bg-white shadow-lg transform transition-transform duration-300 -translate-x-full" id="mobileSidebarContent">
+            <div class="flex items-center justify-between p-6 border-b">
+                <div class="flex items-center space-x-2">
+                    <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+                        <i class="fa fa-rocket text-white text-xl"></i>
+                    </div>
+                    <span class="text-xl font-bold text-primary">助飞体育</span>
+                </div>
+                <button id="closeMobileSidebar" class="text-gray-500 hover:text-gray-700 focus:outline-none">
+                    <i class="fa fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="py-4">
+                <nav class="px-2 space-y-1">
+                    <p class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">管理菜单</p>
+                    
+                    <a href="#" class="sidebar-active flex items-center px-4 py-3 text-sm font-medium rounded-md transition-custom">
+                        <i class="fa fa-calendar-check-o w-5 h-5 mr-3"></i>
+                        预约管理
+                    </a>
+                    
+                    <a href="#" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-custom">
+                        <i class="fa fa-users w-5 h-5 mr-3"></i>
+                        学员管理
+                    </a>
+                    
+                    <a href="#" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-custom">
+                        <i class="fa fa-list w-5 h-5 mr-3"></i>
+                        课程管理
+                    </a>
+                    
+                    <a href="#" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-custom">
+                        <i class="fa fa-bar-chart w-5 h-5 mr-3"></i>
+                        数据统计
+                    </a>
+                    
+                    <p class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mt-6 mb-2">系统设置</p>
+                    
+                    <a href="#" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-custom">
+                        <i class="fa fa-user w-5 h-5 mr-3"></i>
+                        管理员设置
+                    </a>
+                    
+                    <a href="#" class="flex items-center px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-custom">
+                        <i class="fa fa-cog w-5 h-5 mr-3"></i>
+                        系统设置
+                    </a>
+                </nav>
+            </div>
+            
+            <div class="absolute bottom-0 left-0 right-0 p-4 border-t">
+                <button id="mobileLogoutBtn" class="flex items-center w-full px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md transition-custom">
+                    <i class="fa fa-sign-out w-5 h-5 mr-3"></i>
+                    退出登录
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API基础URL
+        const API_BASE_URL = 'http://localhost:3000/api';
+        
+        // DOM元素
+        const bookingTableBody = document.getElementById('bookingTableBody');
+        const processModal = document.getElementById('processModal');
+        const closeProcessModal = document.getElementById('closeProcessModal');
+        const cancelProcess = document.getElementById('cancelProcess');
+        const processForm = document.getElementById('processForm');
+        const bookingIdInput = document.getElementById('bookingId');
+        const searchInput = document.getElementById('searchInput');
+        const statusFilter = document.getElementById('statusFilter');
+        const mobileSidebarBtn = document.getElementById('mobileSidebarBtn');
+        const mobileSidebar = document.getElementById('mobileSidebar');
+        const mobileSidebarContent = document.getElementById('mobileSidebarContent');
+        const closeMobileSidebar = document.getElementById('closeMobileSidebar');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const mobileLogoutBtn = document.getElementById('mobileLogoutBtn');
+        const todayBookingsEl = document.getElementById('todayBookings');
+        const pendingBookingsEl = document.getElementById('pendingBookings');
+        const processedBookingsEl = document.getElementById('processedBookings');
+        const totalBookingsEl = document.getElementById('totalBookings');
+        const showingRangeEl = document.getElementById('showingRange');
+        const successToast = document.getElementById('successToast');
+        const successMessage = document.getElementById('successMessage');
+        const errorToast = document.getElementById('errorToast');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        // 当前页码和分页大小
+        let currentPage = 1;
+        const pageSize = 10;
+        let totalBookings = 0;
+        let allBookings = [];
+        
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查登录状态
+            checkLoginStatus();
+            
+            // 加载预约数据
+            loadBookings();
+            
+            // 加载统计数据
+            loadBookingStats();
+            
+            // 初始化图表
+            initCharts();
+            
+            // 事件监听
+            closeProcessModal.addEventListener('click', closeProcessModalFunc);
+            cancelProcess.addEventListener('click', closeProcessModalFunc);
+            processForm.addEventListener('submit', handleProcessFormSubmit);
+            searchInput.addEventListener('input', handleSearch);
+            statusFilter.addEventListener('change', handleStatusFilter);
+            mobileSidebarBtn.addEventListener('click', openMobileSidebar);
+            closeMobileSidebar.addEventListener('click', closeMobileSidebarFunc);
+            logoutBtn.addEventListener('click', handleLogout);
+            mobileLogoutBtn.addEventListener('click', handleLogout);
+            
+            // 分页按钮事件
+            document.getElementById('prevPage').addEventListener('click', goToPrevPage);
+            document.getElementById('nextPage').addEventListener('click', goToNextPage);
+        });
+        
+        // 检查登录状态
+        function checkLoginStatus() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // 可以在这里验证token有效性
+            // 简化示例，直接使用存储的管理员信息
+            const adminName = localStorage.getItem('adminName') || '管理员';
+            document.getElementById('adminName').textContent = adminName;
+        }
+        
+        // 加载预约数据
+        async function loadBookings(status = null, keyword = null) {
+            try {
+                let url = `${API_BASE_URL}/bookings`;
+                const params = new URLSearchParams();
+                
+                if (status) params.append('status', status);
+                if (keyword) params.append('keyword', keyword);
+                
+                const queryString = params.toString();
+                if (queryString) url += `?${queryString}`;
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('加载预约数据失败');
+                }
+                
+                const data = await response.json();
+                if (data.success) {
+                    allBookings = data.data;
+                    totalBookings = data.count;
+                    renderBookings();
+                    updatePagination();
+                } else {
+                    showError('加载预约数据失败: ' + (data.message || '未知错误'));
+                }
+            } catch (error) {
+                console.error('加载预约数据错误:', error);
+                showError('加载预约数据失败，请重试');
+                renderEmptyBookings();
+            }
+        }
+        
+        // 加载统计数据
+        async function loadBookingStats() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/bookings/stats`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('加载统计数据失败');
+                }
+                
+                const data = await response.json();
+                if (data.success) {
+                    todayBookingsEl.textContent = data.data.today;
+                    pendingBookingsEl.textContent = data.data.pending;
+                    processedBookingsEl.textContent = data.data.processed;
+                    totalBookingsEl.textContent = data.data.total;
+                } else {
+                    showError('加载统计数据失败: ' + (data.message || '未知错误'));
+                }
+            } catch (error) {
+                console.error('加载统计数据错误:', error);
+                showError('加载统计数据失败，请重试');
+            }
+        }
+        
+        // 渲染预约列表
+        function renderBookings() {
+            bookingTableBody.innerHTML = '';
+            
+            if (allBookings.length === 0) {
+                renderEmptyBookings();
+                return;
+            }
+            
+            // 分页处理
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = Math.min(startIndex + pageSize, allBookings.length);
+            const paginatedBookings = allBookings.slice(startIndex, endIndex);
+            
+            // 更新显示范围
+            showingRangeEl.textContent = `${startIndex + 1} 到 ${endIndex}`;
+            
+            paginatedBookings.forEach(booking => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-custom';
+                
+                // 格式化时间戳
+                const formattedTimestamp = new Date(booking.created_at).toLocaleString();
+                
+                // 状态样式
+                let statusClass = '';
+                let statusText = '';
+                
+                if (booking.status === 'pending') {
+                    statusClass = 'bg-warning/10 text-warning';
+                    statusText = '待处理';
+                } else {
+                    statusClass = 'bg-success/10 text-success';
+                    statusText = '已处理';
+                }
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        ${booking.booking_number}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div class="font-medium text-gray-900">${booking.name}</div>
+                        <div>${booking.phone}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${booking.course_name}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div>${booking.booking_date}</div>
+                        <div>${booking.booking_time}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
+                            ${statusText}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button class="text-primary hover:text-primary/80 process-btn" data-id="${booking.id}">
+                            处理
+                        </button>
+                    </td>
+                `;
+                
+                bookingTableBody.appendChild(row);
+            });
+            
+            // 添加处理按钮事件
+            document.querySelectorAll('.process-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const bookingId = this.getAttribute('data-id');
+                    openProcessModal(bookingId);
+                });
+            });
+        }
+        
+        // 渲染空预约列表
+        function renderEmptyBookings() {
+            bookingTableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                        <div class="flex flex-col items-center">
+                            <i class="fa fa-calendar-o text-4xl mb-4 text-gray-300"></i>
+                            <p>没有找到匹配的预约记录</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+        
+        // 更新分页控件
+        function updatePagination() {
+            totalBookings = allBookings.length;
+            totalBookingsEl.textContent = totalBookings;
+            
+            const totalPages = Math.ceil(totalBookings / pageSize);
+            
+            // 更新页码按钮状态
+            document.getElementById('prevPage').disabled = currentPage === 1;
+            document.getElementById('nextPage').disabled = currentPage >= totalPages;
+            
+            // 更新当前页码显示
+            document.getElementById('page1').textContent = currentPage;
+        }
+        
+        // 上一页
+        function goToPrevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderBookings();
+            }
+        }
+        
+        // 下一页
+        function goToNextPage() {
+            const totalPages = Math.ceil(totalBookings / pageSize);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderBookings();
+            }
+        }
+        
+        // 打开处理预约弹窗
+        async function openProcessModal(bookingId) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error('获取预约详情失败');
+                }
+                
+                const data = await response.json();
+                if (data.success && data.data) {
+                    const booking = data.data;
+                    
+                    // 填充表单数据
+                    bookingIdInput.value = booking.id;
+                    document.getElementById('modalBookingNumber').textContent = booking.booking_number;
+                    document.getElementById('modalBookingTimestamp').textContent = new Date(booking.created_at).toLocaleString();
+                    document.getElementById('modalName').textContent = booking.name;
+                    document.getElementById('modalPhone').textContent = booking.phone;
+                    document.getElementById('modalCourse').textContent = booking.course_name;
+                    document.getElementById('modalDate').textContent = booking.booking_date;
+                    document.getElementById('modalTime').textContent = booking.booking_time;
+                    document.getElementById('modalExperience').textContent = booking.experience || '未填写';
+                    document.getElementById('modalMessage').textContent = booking.message || '无';
+                    document.getElementById('notes').value = booking.notes || '';
+                    
+                    // 设置状态单选按钮
+                    document.querySelectorAll('input[name="status"]').forEach(radio => {
+                        radio.checked = radio.value === booking.status;
+                    });
+                    
+                    // 显示弹窗
+                    processModal.classList.remove('opacity-0', 'pointer-events-none');
+                    processModal.querySelector('div').classList.remove('scale-95');
+                    processModal.querySelector('div').classList.add('scale-100');
+                } else {
+                    showError('获取预约详情失败: ' + (data.message || '未知错误'));
+                }
+            } catch (error) {
+                console.error('获取预约详情错误:', error);
+                showError('获取预约详情失败，请重试');
+            }
+        }
+        
+        // 关闭处理预约弹窗
+        function closeProcessModalFunc() {
+            processModal.classList.add('opacity-0', 'pointer-events-none');
+            processModal.querySelector('div').classList.remove('scale-100');
+            processModal.querySelector('div').classList.add('scale-95');
+        }
+        
+        // 处理预约表单提交
+        async function handleProcessFormSubmit(e) {
+            e.preventDefault();
+            
+            const bookingId = bookingIdInput.value;
+            const status = document.querySelector('input[name="status"]:checked').value;
+            const notes = document.getElementById('notes').value;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ status, notes })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || '更新预约状态失败');
+                }
+                
+                if (data.success) {
+                    // 关闭弹窗
+                    closeProcessModalFunc();
+                    
+                    // 重新加载数据
+                    loadBookings(statusFilter.value !== 'all' ? statusFilter.value : null, searchInput.value);
+                    loadBookingStats();
+                    
+                    // 显示成功提示
+                    showSuccess('预约处理成功');
+                } else {
+                    showError('更新预约状态失败: ' + (data.message || '未知错误'));
+                }
+            } catch (error) {
+                console.error('更新预约状态错误:', error);
+                showError(error.message || '更新预约状态失败，请重试');
+            }
+        }
+        
+        // 处理搜索
+        function handleSearch() {
+            const keyword = searchInput.value.trim();
+            const status = statusFilter.value !== 'all' ? statusFilter.value : null;
+            
+            // 重置页码
+            currentPage = 1;
+            
+            // 加载过滤后的预约数据
+            if (keyword) {
+                loadBookings(status, keyword);
+            } else {
+                loadBookings(status);
+            }
+        }
+        
+        // 处理状态筛选
+        function handleStatusFilter() {
+            handleSearch(); // 复用搜索逻辑
+        }
+        
+        // 打开移动端侧边栏
+        function openMobileSidebar() {
+            mobileSidebar.classList.remove('hidden');
+            setTimeout(() => {
+                mobileSidebarContent.classList.remove('-translate-x-full');
+            }, 10);
+        }
+        
+        // 关闭移动端侧边栏
+        function closeMobileSidebarFunc() {
+            mobileSidebarContent.classList.add('-translate-x-full');
+            setTimeout(() => {
+                mobileSidebar.classList.add('hidden');
+            }, 300);
+        }
+        
+        // 处理退出登录
+        function handleLogout() {
+            // 清除本地存储
+            localStorage.removeItem('token');
+            localStorage.removeItem('adminName');
+            
+            // 跳转到登录页
+            window.location.href = 'login.html';
+        }
+        
+        // 显示成功提示
+        function showSuccess(message) {
+            successMessage.textContent = message;
+            successToast.classList.remove('translate-x-full');
+            
+            // 3秒后隐藏
+            setTimeout(() => {
+                successToast.classList.add('translate-x-full');
+            }, 3000);
+        }
+        
+        // 显示错误提示
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorToast.classList.remove('translate-x-full');
+            
+            // 3秒后隐藏
+            setTimeout(() => {
+                errorToast.classList.add('translate-x-full');
+            }, 3000);
+        }
+        
+        // 初始化图表
+        function initCharts() {
+            // 预约趋势图表
+            const trendCtx = document.getElementById('bookingTrendChart').getContext('2d');
+            
+            // 模拟近7天数据
+            const dates = [];
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                dates.push(date.toLocaleDateString());
+            }
+            
+            new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: '预约数量',
+                        data: [8, 12, 5, 15, 7, 10, 12],
+                        borderColor: '#165DFF',
+                        backgroundColor: 'rgba(22, 93, 255, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // 课程分布图表
+            const distributionCtx = document.getElementById('courseDistributionChart').getContext('2d');
+            
+            new Chart(distributionCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: [
+                        '青少年篮球训练',
+                        '成人健身塑形',
+                        '游泳技能培训',
+                        '青少年足球训练',
+                        '羽毛球基础班',
+                        '乒乓球提高班'
+                    ],
+                    datasets: [{
+                        data: [25, 20, 18, 15, 12, 10],
+                        backgroundColor: [
+                            '#165DFF',
+                            '#36D399',
+                            '#FBBD23',
+                            '#F87272',
+                            '#9333EA',
+                            '#3ABFF8'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 15
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+    </script>
+</body>
+</html>
